@@ -1,21 +1,15 @@
 
-ROOT		:= $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-BUILDER		:= local/builder
+ROOT	:= $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+TAG 	:= frankzhao/birdtest
+NAME	:= birdtest
 
-REPOSITORY	:= docker.io/alectolytic/bird
-VERSION		:= 1.5.0
-
-.PHONY: all build clean
+.PHONY: all build
 
 all: build
 
 build:
-	@docker build -t $(BUILDER) $(ROOT)
-	@docker run \
-		--privileged \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v $(shell which docker):$(shell which docker) \
-		-it $(BUILDER)
+	@docker build -t $(TAG) $(ROOT)
+	@docker run -it -d --name $(NAME) $(TAG)
 
 push/$(VERSION):
 	@docker tag -f $(REPOSITORY):latest $(REPOSITORY):$(VERSION)
@@ -27,4 +21,5 @@ push/latest:
 push: | push/latest push/$(VERSION)
 
 clean:
-	@docker rmi -f $(BUILDER)
+	@docker rm @(NAME)
+	@docker rmi -f $(TAG)

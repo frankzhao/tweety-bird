@@ -1,25 +1,18 @@
-FROM cloudrouter/base-fedora:latest
-MAINTAINER Arun Neelicattu <arun.neelicattu@gmail.com>
+FROM boot2docker/boot2docker:latest
+MAINTAINER Frank Zhao <frank@frankzhao.net>
 
-RUN dnf -y upgrade
+RUN apt-get update
 
-ENV BUILDROOT /buildroot
+RUN apt-get install apt-utils -qq
+RUN apt-get install bird -qq
+RUN apt-get install iputils-ping -qq
+RUN apt-get install docker -qq
 
-ADD loadbins /usr/bin/loadbins
+RUN mkdir -p /etc/bird.d
+RUN mkdir -p /{log,run}
+RUN mkdir -p /run/bird
 
-RUN dnf -y install bird
+COPY ./bird.conf /etc/bird.conf
 
-RUN mkdir -p ${BUILDROOT}
-
-WORKDIR ${BUILDROOT}
-
-RUN DEST=rootfs loadbins /usr/sbin/bird
-RUN DEST=rootfs loadbins /usr/sbin/birdc
-RUN mkdir -p ./rootfs/etc/bird.d
-RUN mkdir -p ./rootfs/var/{log,run}
-
-COPY ./bird.conf ./rootfs/etc/bird.conf
-
-COPY Dockerfile.final ./Dockerfile
-
-CMD docker build -t alectolytic/bird ${BUILDROOT}
+ENTRYPOINT ["/usr/sbin/bird"]
+CMD ["-c", "/etc/bird.conf", "-s", "/run/bird/bird.ctl", "-f"]
